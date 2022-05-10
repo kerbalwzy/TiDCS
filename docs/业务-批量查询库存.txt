@@ -1,0 +1,55 @@
+// 请求示例, 需要登录，未登录情况下返回302，并提供登录的location
+fetch("https://www.ti.com.cn/avlmodel/api/inv-stock-forecast-info?locale=zh-CN", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,ko;q=0.7,de;q=0.6",
+    "content-type": "application/json",
+    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "x-sec-clge-req-type": "ajax"
+  },
+  "referrer": "https://www.ti.com.cn/cross-reference-search/cn/list/105473",
+  "referrerPolicy": "no-referrer-when-downgrade",
+  "body": "[\"TLV62569ADRLR\",\"TPS2557DRBR\",\"TPS7A8400ARGRR\"]",
+  "method": "POST",
+  "mode": "cors",
+  "credentials": "include"
+});
+
+// js代码示例
+let xhr = new XMLHttpRequest()
+xhr.open("POST", "https://www.ti.com.cn/avlmodel/api/inv-stock-forecast-info?locale=zh-CN")
+xhr.setRequestHeader('content-type', 'application/json')
+xhr.send("[\"TLV62569ADRLR\",\"TPS2557DRBR\",\"TPS7A8400ARGRR\"]")
+
+// 响应示例[响应结果只包含了简单的库存信息]
+{
+    "TPS2557DRBR": {
+        "opn": "TPS2557DRBR",
+        "currentInventory": 0,  // 当前库存
+        "limit": 999999999,
+        "forecast": {
+            "type": "H"
+        }
+    },
+    "TPS7A8400ARGRR": {
+        "opn": "TPS7A8400ARGRR",
+        "currentInventory": 0,
+        "limit": 999999999,
+        "forecast": {
+            "type": "H"
+        }
+    },
+    "TLV62569ADRLR": {
+        "opn": "TLV62569ADRLR",
+        "currentInventory": 0,
+        "limit": 999999999,
+        "forecast": {
+            "type": "H"
+        }
+    }
+}

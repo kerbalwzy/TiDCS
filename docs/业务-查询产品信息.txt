@@ -1,0 +1,156 @@
+// 请求示例-免登录接口
+fetch("https://www.ti.com.cn/avlmodel/api/singlepart?searchTerm=TPS2557DRBR&operation=page-load&locale=zh-CN", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,ko;q=0.7,de;q=0.6",
+    "content-type": "application/json",
+    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "x-sec-clge-req-type": "ajax"
+  },
+  "referrer": "https://www.ti.com.cn/cross-reference-search/zh-cn/singlepart?searchTerm=TPS2557DRBR",
+  "referrerPolicy": "no-referrer-when-downgrade",
+  "body": null,
+  "method": "GET",
+  "mode": "cors",
+  "credentials": "include"
+});
+// js代码示例
+let xhr = new XMLHttpRequest()
+xhr.open("GET", "https://www.ti.com.cn/avlmodel/api/singlepart?searchTerm=TPS2557DRBR&operation=page-load&locale=zh-CN")
+xhr.send()
+// 响应示例
+{
+    "searchTerm": "TPS2557DRBR",
+    "opnInfo": {
+        "genericPartNumber": "TPS2557",
+        "orderablePartNumber": "TPS2557DRBR",
+        "genericPartID": 36221,
+        "orderablePartID": 142203,
+        "partDescription": "高电平有效的 0.5-5A 可调节 ILIMIT、2.5-6.5V、22mΩ USB 电源开关",
+        "dataSheetLinkPdf": "/cn/lit/gpn/tps2557",
+        "dataSheetLinkHtml": "/document-viewer/cn/TPS2557/datasheet",
+        "statusID": 1,
+        "statusDisplay": "正在供货",
+        "statusDescription": "此产品已上市，且可供购买。  可提供某些产品的较新替代品。 ",
+        "hasReplacements": false,
+        "replacementInfoList": [],
+        "delimitedTieredPriceString": "1,99,.896|100,249,.74|250,999,.532|1000,99999999,.4",
+        "price": {
+            "basePrice": ".4",
+            "currencyCode": "USD",
+            "baseQty": "1ku"
+        },
+        "requestedQty": 1,
+        "ihsPartInfo": {
+            "isTIPart": true,
+            "hasIhsParameters": true,
+            "ihsParamInfoList": []
+        },
+        "availableForPurchaseFlag": "Y",
+        "availableForSampleFlag": "N",
+        "sampleText": "Not available",
+        "orderLimit": 999999,
+        "customReelApi": "1",
+        "relevantForCustomReel": "1",
+        "relevantForLotDateCode": "0",
+        "packageQuantity": "3000",
+        "releaseDate": "2009-11-17T06:00:00.000+00:00",
+        "packageQtyCarrier": "3000|LARGE T&R",
+        "packagePins": "SON (DRB)|8",
+        "carrierUrl": "/packaging/cn/docs/carriermaterial/carrierlookup?OPN=TPS2557DRBR&state=details#results",
+        "pkgTypeUrl": "/cn/lit/pdf/mpds118k"
+    },
+    "matchedOrderablePart": {
+        "genericPartNumber": "TPS2557",
+        "orderablePartNumber": "TPS2557DRBR",
+        "genericPartID": 36221,
+        "orderablePartID": 142203,
+        "partDescription": "高电平有效的 0.5-5A 可调节 ILIMIT、2.5-6.5V、22mΩ USB 电源开关",
+        "dataSheetLinkPdf": "/cn/lit/gpn/tps2557",
+        "dataSheetLinkHtml": "/document-viewer/cn/TPS2557/datasheet",
+        "statusID": 1,
+        "statusDisplay": "正在供货",
+        "statusDescription": "此产品已上市，且可供购买。  可提供某些产品的较新替代品。 ",
+        "hasReplacements": false,
+        "replacementInfoList": [],
+        "delimitedTieredPriceString": "1,99,.896|100,249,.74|250,999,.532|1000,99999999,.4",
+        "price": {
+            "basePrice": ".4",
+            "currencyCode": "USD",
+            "baseQty": "1ku"
+        },
+        "requestedQty": 1,
+        "ihsPartInfo": {
+            "isTIPart": true,
+            "hasIhsParameters": true,
+            "ihsParamInfoList": []
+        },
+        "availableForPurchaseFlag": "Y",
+        "availableForSampleFlag": "N",
+        "sampleText": "Not available",
+        "orderLimit": 999999,
+        "customReelApi": "1",
+        "relevantForCustomReel": "1",
+        "relevantForLotDateCode": "0",
+        "packageQuantity": "3000",
+        "releaseDate": "2009-11-17T06:00:00.000+00:00",
+        "packageQtyCarrier": "3000|LARGE T&R",
+        "packagePins": "SON (DRB)|8",
+        "carrierUrl": "/packaging/cn/docs/carriermaterial/carrierlookup?OPN=TPS2557DRBR&state=details#results",
+        "pkgTypeUrl": "/cn/lit/pdf/mpds118k"
+    },
+    "tempFlag": 0,
+    "result": {
+        "matches": {
+            "tiOpnList": [
+                {
+                    "genericPartNumber": "TPS2557",
+                    "orderablePartNumber": "TPS2557DRBR",
+                    "genericPartID": 36221,
+                    "orderablePartID": 142203,
+                    "partDescription": "高电平有效的 0.5-5A 可调节 ILIMIT、2.5-6.5V、22mΩ USB 电源开关",
+                    "dataSheetLinkPdf": "/cn/lit/gpn/tps2557",
+                    "dataSheetLinkHtml": "/document-viewer/cn/TPS2557/datasheet",
+                    "statusID": 1,
+                    "statusDisplay": "正在供货",
+                    "statusDescription": "此产品已上市，且可供购买。  可提供某些产品的较新替代品。 ",
+                    "hasReplacements": false,
+                    "replacementInfoList": [],
+                    "delimitedTieredPriceString": "1,99,.896|100,249,.74|250,999,.532|1000,99999999,.4",
+                    "price": {
+                        "basePrice": ".4",
+                        "currencyCode": "USD",
+                        "baseQty": "1ku"
+                    },
+                    "requestedQty": 1,
+                    "ihsPartInfo": {
+                        "isTIPart": true,
+                        "hasIhsParameters": true,
+                        "ihsParamInfoList": []
+                    },
+                    "availableForPurchaseFlag": "Y",
+                    "availableForSampleFlag": "N",
+                    "sampleText": "Not available",
+                    "orderLimit": 999999,
+                    "customReelApi": "1",
+                    "relevantForCustomReel": "1",
+                    "relevantForLotDateCode": "0",
+                    "packageQuantity": "3000",
+                    "releaseDate": "2009-11-17T06:00:00.000+00:00",
+                    "packageQtyCarrier": "3000|LARGE T&R",
+                    "packagePins": "SON (DRB)|8",
+                    "carrierUrl": "/packaging/cn/docs/carriermaterial/carrierlookup?OPN=TPS2557DRBR&state=details#results",
+                    "pkgTypeUrl": "/cn/lit/pdf/mpds118k"
+                }
+            ]
+        }
+    },
+    "tempCounts": 1,
+    "selectedPartNumber": "TPS2557DRBR",
+    "selectedManufacturer": "Texas Instruments"
+}

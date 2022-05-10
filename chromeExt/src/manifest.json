@@ -1,0 +1,36 @@
+{
+  "manifest_version": 2,
+  "name": "TiDCS-Ext",
+  "version": "0.0.1",
+  "description": "Texas Instruments网页自动化操作Chrome插件客户端",
+  "browser_action": {
+    "default_title": "TiDCS-Ext"
+  },
+  "content_security_policy": "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; object-src 'self';",
+  "background": {
+    "page": "background.html"
+  },
+  "permissions": [
+    "http://*/*",
+    "https://*/*",
+    "tabs",
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "cookies"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://login.ti.com/as/authorization.oauth2*"
+      ],
+      "js": [
+        "libs/jquery-3.6.0.min.js",
+        "libs/html2canvas.min.js",
+        "auto-login.js"
+      ],
+      "run_at": "document_end"
+    }
+  ]
+  //  "update_url": "http://nowkin.com:43999/chrome-ext-update/AmzDataHelperUpdate.xml"
+}

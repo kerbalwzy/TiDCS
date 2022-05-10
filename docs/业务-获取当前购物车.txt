@@ -1,0 +1,56 @@
+// 请求示例
+fetch("https://www.ti.com.cn/occservices/v2/ti/viewCart?currency=CNY", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,ko;q=0.7,de;q=0.6",
+    "cache-control": "max-age=0",
+    "content-type": "application/json",
+    "newrelic": "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkJyb3dzZXIiLCJhYyI6IjE3MjA1OTQiLCJhcCI6IjEzMDkxOTg1NzgiLCJpZCI6Ijc2ODBhMjM5NWY2NGJjMzUiLCJ0ciI6IjY2ZjA1ZDkyM2I5YWZiMDZkNmEzYjNhZDQ2YTJkOGYwIiwidGkiOjE2NTE4OTg4MDQyNjAsInRrIjoiMTU2NTEzNiJ9fQ==",
+    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "traceparent": "00-66f05d923b9afb06d6a3b3ad46a2d8f0-7680a2395f64bc35-01",
+    "tracestate": "1565136@nr=0-1-1720594-1309198578-7680a2395f64bc35----1651898804260",
+    "x-sec-clge-req-type": "ajax"
+  },
+  "referrer": "https://www.ti.com.cn/product/cn/ADC128S102-SEP?jktype=homepageproduct",
+  "referrerPolicy": "no-referrer-when-downgrade",
+  "body": null,
+  "method": "GET",
+  "mode": "cors",
+  "credentials": "include"
+});
+// js代码示例
+let xhr = new XMLHttpRequest()
+xhr.open("GET", "https://www.ti.com.cn/occservices/v2/ti/viewCart?currency=CNY")
+xhr.send()
+
+// 响应示例
+{
+    "CartId": "451e2be7-3652-44f9-bb10-aff7a908f670",
+    "CartCount": "2",
+    "StatusType": "SUCCESS",
+    "Message": "Cart Details Retrieved",
+    "StatusCode": "200",
+    "Items": [
+        {
+            "OpnId": "ADC128S102PWTSEP",
+            "Quantity": "3",
+            "Description": "Radiation-tolerant, eight-channel, 50-kSPS to 1-MSPS, 12-bit analog-to-digital converter (ADC)</p",
+            "Price": 10726.98,
+            "PartImage": "https://www.ti.com/content/dam/ticom/images/products/package/p/pw0016a.png"
+        },
+        {
+            "OpnId": "ADC3542IRSBT",
+            "Quantity": "1",
+            "Description": "Single-channel, 14-bit, 25-MSPS, low-noise, ultra-low-power and low-latency ADC",
+            "Price": 203.66,
+            "PartImage": "https://www.ti.com/content/dam/ticom/images/products/package/r/rsb0040e.png"
+        }
+    ],
+    "CartTotal": 10930.64,
+    "ConversionRate": 6.67200427
+}

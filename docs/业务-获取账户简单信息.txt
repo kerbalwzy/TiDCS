@@ -1,0 +1,32 @@
+// 请求示例 需要登录，未登录情况下返回302，并提供登录的location
+fetch("https://www.ti.com.cn/avlmodel/api/user/info?locale=zh-CN", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,ko;q=0.7,de;q=0.6",
+    "content-type": "application/json",
+    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "x-sec-clge-req-type": "ajax"
+  },
+  "referrer": "https://www.ti.com.cn/cross-reference-search/zh-cn/singlepart?searchTerm=TPS2557DRBR",
+  "referrerPolicy": "no-referrer-when-downgrade",
+  "body": null,
+  "method": "GET",
+  "mode": "cors",
+  "credentials": "include"
+});
+// js代码示例
+let xhr = new XMLHttpRequest()
+xhr.open("GET", "https://www.ti.com.cn/avlmodel/api/user/info?locale=zh-CN")
+xhr.send()
+// 响应示例， 可用于检查是否登录
+{
+    "userId": 10368755,
+    "isInternal": false,
+    "accessLevel": 0,
+    "companyProfile": "深圳富视安"
+}

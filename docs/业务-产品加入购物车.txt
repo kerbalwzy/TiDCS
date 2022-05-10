@@ -1,0 +1,42 @@
+// 请求示例
+fetch("https://www.ti.com.cn/occservices/v2/ti/addtocart", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,ko;q=0.7,de;q=0.6",
+    "cache-control": "no-store, must-revalidate",
+    "content-type": "application/json",
+    "expires": "0",
+    "newrelic": "eyJ2IjpbMCwxXSwiZCI6eyJ0eSI6IkJyb3dzZXIiLCJhYyI6IjE3MjA1OTQiLCJhcCI6IjEzMDkxOTg1NzgiLCJpZCI6ImU5NjAyNzhhMDNiMjc2MDkiLCJ0ciI6IjEwNGQ0NzBlNzc4NjRmZDA5ZWJhYTIyYzdlYWZiM2EwIiwidGkiOjE2NTE4OTkxODc3MDUsInRrIjoiMTU2NTEzNiJ9fQ==",
+    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "traceparent": "00-104d470e77864fd09ebaa22c7eafb3a0-e960278a03b27609-01",
+    "tracestate": "1565136@nr=0-1-1720594-1309198578-e960278a03b27609----1651899187705",
+    "x-sec-clge-req-type": "ajax"
+  },
+  "referrer": "https://www.ti.com.cn/product/cn/ADC3542",
+  "referrerPolicy": "no-referrer-when-downgrade",
+  "body": "{\"cartRequestList\":[{\"packageOption\":null,\"opnId\":\"ADC3542IRSBT\",\"quantity\":\"1\",\"tiAddtoCartSource\":\"ti.com-productfolder\",\"sparam\":\"\"}],\"currency\":\"USD\"}",
+  "method": "POST",
+  "mode": "cors",
+  "credentials": "include"
+});
+// js代码示例
+let xhr = new XMLHttpRequest()
+xhr.open("POST", "https://www.ti.com.cn/occservices/v2/ti/addtocart")
+xhr.setRequestHeader('content-type', 'application/json')
+xhr.send("{\"cartRequestList\":[{\"packageOption\":null,\"opnId\":\"ADC3542IRSBT\",\"quantity\":\"1\",\"tiAddtoCartSource\":\"ti.com-productfolder\",\"sparam\":\"\"}],\"currency\":\"USD\"}")
+
+// 响应示例
+{
+    "cartId": "451e2be7-3652-44f9-bb10-aff7a908f670",
+    "statusType": "SUCCESS",
+    "statusCode": "200",
+    "message": "2 - Items added to the cart",
+    "errorType": null,
+    "placeholderMap": null,
+    "cartResponsetList": null
+}
