@@ -168,7 +168,6 @@ function tiProfile() {
     })
 }
 
-
 function tiCart() {
     if (TiAutoLoginIng) {
         return false
@@ -311,6 +310,7 @@ function tiLogin() {
     })
 }
 
+
 function initBackground() {
     let tiLoginBtn = document.getElementById('tiLogin');
     tiLoginBtn.addEventListener('click', tiLogin)
@@ -319,6 +319,9 @@ function initBackground() {
 }
 
 window.onload = initBackground
+
+
+
 
 
 

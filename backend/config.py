@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 # @Author: wzy
-# @Time: 2021/7/20
 # 配置类
 __all__ = ["Config"]
 
@@ -34,13 +33,8 @@ class Config:
     LOG_FILE_SIZE = 1204 * 1024 * 10
     LOG_FILE_BACK_COUNT = 10
     LOG_SCREEN_SHOT_DIR = os.path.join(PROJECT_DIR, "logs/screen_shot")
-    # 访问的IP白名单
-    HTTP_ACCESS_IP_WL = [
-        "127.0.0.1",
-        "10.0.0.13",
-        "10.0.0.23",
-        "10.0.0.118",
-        "10.0.0.174",
-        "10.0.0.103",
-        "10.0.0.76"
+
+    # httpApi免登录请求路径
+    LOGIN_WHITE_PATH = [
+        "/tidcs/login"
     ]

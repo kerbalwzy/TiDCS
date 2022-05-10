@@ -1,19 +1,36 @@
 # -*- coding:utf-8 -*-
 # @Author: wzy
-# @Time: 2021/7/20
 # ORM
-__all__ = ["db", "BaseModel", "init_db"]
+__all__ = ["db", "init_db", "query_paginate", "BaseModel", "Product"]
 
 from copy import deepcopy
 from datetime import datetime
+from typing import Tuple
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, DateTime, String, TEXT, Integer
+from sqlalchemy.orm import Query
 from sqlalchemy.orm.attributes import flag_modified
 
 from backend.utils.u_time import utc2cn
 
 db = SQLAlchemy()
+
+
+def init_db(app):
+    db.init_app(app)
+
+
+# 查询集分页
+def query_paginate(query: Query, page: int, limit: int) -> Tuple[list, int]:
+    if limit:
+        page_ob = query.paginate(page=page, per_page=limit, error_out=False)
+        result = page_ob.items
+        count = page_ob.total
+    else:
+        result = query.all()
+        count = len(result)
+    return result, count
 
 
 class BaseModel(db.Model):
@@ -65,7 +82,3 @@ class Product(BaseModel):
     orderLimit = Column(Integer, doc="限购数量")
     inventory = Column(Integer, doc="库存数量")
     wantLimit = Column(Integer, doc="抢购上限，自定义")
-
-
-def init_db(app):
-    db.init_app(app)

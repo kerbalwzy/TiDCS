@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 # @Author: wzy
-# @Time: 2021/7/20
 # 核心模块, 用户创建Flask App对象和Flask-SocketIo App对象, 并完成一些基本功能
 __all__ = ["app", "socket_io", "init_socket_io", "ChromeExtWorker", "TaskBase"]
 
@@ -14,7 +13,7 @@ from flask_socketio import SocketIO, emit
 
 from backend.http_apis import httpApi
 from backend.utils.u_time import utc2cn
-from backend.vars import ChromeExtWorkerPool, SidNetDelayLastPintAt
+from backend.consts import ChromeExtWorkerPool, SidNetDelayLastPintAt
 from config import Config
 from utils.u_singleton import synchronized
 
@@ -122,6 +121,7 @@ def init_socket_io():
         worker = ChromeExtWorkerPool.get(request.sid, None)
         if worker:
             worker.cart = params
+            worker.last_online_at = utc2cn(datetime.utcnow())
 
     @socket_io.event
     def worker_callback(params):
