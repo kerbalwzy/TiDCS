@@ -36,7 +36,7 @@ def excel_resp(wb: Workbook, filename: str) -> Response:
 # 加载跨域处理中间件， 为每个成功的响应头添加CORS-CONTROL的头部信息
 @httpApi.after_request
 def cors_header(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = request.origin if request.origin else '*'  # 获取来源的域名+端口
     response.headers["Access-Control-Max-Age"] = "86400"
     response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Methods"] = "HEAD, GET, OPTIONS, POST, PUT, DELETE"
@@ -66,6 +66,7 @@ def parser_jwt():
             payload = jwt.decode(jwt_token, current_app.config.get("SECRET_KEY"))
         except Exception:
             return json_resp(errcode=RespCode.JwtInvalid, msg="JWT-Token-Invalid", status_code=403)
+        g.user_account = payload["account"]
 
 
 # flask-restful参数验证异常处理
@@ -81,4 +82,4 @@ def restful_params_validate_err(e):
 
 from .workers import *
 from .products import *
-from .auth import *
+from .user import *

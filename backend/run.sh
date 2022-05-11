@@ -4,11 +4,12 @@ if [ "$1" == "stop" ]; then
     fuser -k -n tcp 43998
 elif [ "$1" == "start" ]; then
     fuser -k -n tcp 43998
-    source "<env_active_path>"
+    source "/root/.virtualenvs/TiDCS/bin/activate"
     echo '激活虚拟环境'
-    cd /root/amazon_store_comm
+    cd /root/TiDCS/backend
     echo '启动进程'
-    python main.py  > /dev/null 2>&1 &
+#    python main.py  > /dev/null 2>&1 &
+    python main.py
 else
     echo 'Usage: bash run.sh [start, stop]'
 fi

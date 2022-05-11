@@ -14,11 +14,9 @@ class Config:
     # 加密相关配置
     SECRET_KEY = os.environ.get("SECRET_KEY", "a8i21e#$RSD12")
     # MySQL相关配置项
-    SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://tidcs:tidcs123@175.178.246.168:3306/tidcs?charset=utf8mb4"  # 默认数据库连接
-    # SQLALCHEMY_BINDS = {  # 多数据库连接
-    #     '<name>': 'mysql+mysqlconnector://<user>:<password>@<ip>:<port>/<db_name>?charset=utf8mb4',
-    # }
-    SQLALCHEMY_POOL_RECYCLE = 30
+    # 默认数据库连接
+    SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://tidcs:tidcs123@127.0.0.1:3306/tidcs?charset=utf8mb4"
+    SQLALCHEMY_POOL_RECYCLE = 60 * 30
     SQLALCHEMY_POOL_SIZE = 100
     SQLALCHEMY_MAX_OVERFLOW = 100
     SQLALCHEMY_TRACK_MODIFICATIONS = False

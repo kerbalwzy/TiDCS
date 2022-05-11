@@ -24,8 +24,8 @@ function request(option, callback) {
 // https://developer.chrome.com/docs/extensions/reference/runtime/#property-id 
 const myExtensionId = chrome.runtime.id;
 const tiOrigin = "www.ti.com"
-const BackendSrvAddr = 'ws://127.0.0.1:43998';
-// const BackendSrvAddr = 'ws://10.0.0.23:43998';
+// const BackendSrvAddr = 'ws://127.0.0.1:43998';
+const BackendSrvAddr = 'ws://175.178.246.168';
 let TiAutoLoginIng = false;
 let TiGetProfileClock = null;
 
@@ -143,6 +143,8 @@ function workerOffline() {
     })
 }
 
+window.tiProfile = tiProfile
+
 function tiProfile() {
     if (TiAutoLoginIng) {
         return false
@@ -168,6 +170,8 @@ function tiProfile() {
     })
 }
 
+window.tiCart = tiCart
+
 function tiCart() {
     if (TiAutoLoginIng) {
         return false
@@ -192,6 +196,7 @@ function tiCart() {
     })
 
 }
+
 
 function openTiLoginPage(tabId) {
     chrome.tabs.update(tabId, {url: `https://${tiOrigin}/secure-link-forward/?gotoUrl=https://${tiOrigin}`}, () => {

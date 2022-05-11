@@ -3,7 +3,7 @@
 # @Time: 2022/5/10
 #
 import jwt
-from flask import current_app
+from flask import current_app, g
 from flask_restful import reqparse
 
 from backend.consts import Users, RespCode
@@ -23,9 +23,22 @@ def login():
         return json_resp(errcode=RespCode.PasswordError, msg="密码错误")
     access_token = jwt.encode(payload={"account": params['account']},
                               key=current_app.config.get("SECRET_KEY")).decode('ascii')
-    resp = json_resp(errcode=0, msg="success", data={"access_token": access_token})
+    resp = json_resp(errcode=0, msg="success", data={
+        "access_token": access_token, "account": params["account"]})
     resp.set_cookie('access_token', access_token)
     return resp
+
+
+@httpApi.route("/logout", methods=["GET"], endpoint="用户注销")
+def logout():
+    resp = json_resp(errcode=0, msg="success")
+    resp.set_cookie("access_token", "")
+    return resp
+
+
+@httpApi.route("/profile", methods=["GET"], endpoint="获取用户信息")
+def user_profile():
+    return json_resp(errcode=0, msg="success", data={"account": g.user_account})
 
 
 if __name__ == '__main__':
