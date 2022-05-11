@@ -48,13 +48,8 @@ SocketIoCli.on("ping", function () {
     SocketIoCli.emit("pong")
 })
 
-SocketIoCli.on("online_ok", function (params) {
-    // console.log("[debug] ", params["msg"])
-})
-
-SocketIoCli.on("task_exec", function (task) {
-    // console.log("[debug] worker task received: ", task)
-
+SocketIoCli.on("spider_product_base", function (params) {
+    tiProductBase(params.code)
 })
 
 
@@ -195,6 +190,52 @@ function tiCart() {
         }
     })
 
+}
+
+window.tiProductBase = tiProductBase
+
+function tiProductBase(code) {
+    if (TiAutoLoginIng) {
+        return false
+    }
+    let option = {
+        method: "GET",
+        url: `https://${tiOrigin}/avlmodel/api/singlepart?searchTerm=${code}&operation=page-load&locale=zh-CN`
+    }
+    request(option, function (xhr) {
+        if (xhr.status !== 200) {
+            console.log(`${tiOrigin}服务器异常，返回状态码${xhr.status}`)
+            return false
+        }
+        if (xhr.responseURL.indexOf('login.ti.com') > -1) {
+            // 未登录，则开启登录任务
+            workerOffline()
+            tiAutoLogin()
+        } else {
+            let searchRes = JSON.parse(xhr.responseText)
+            let matchedProduct = {
+                orderablePartNumber: code,
+                partDescription: "未抓取到数据，请检查型号是否正确",
+                price: {
+                    basePrice: null,
+                    currencyCode: null,
+                    baseQty: null,
+                },
+                orderLimit: null
+            }
+            if (searchRes.tempCounts > 0) {
+                let tiOpnList = searchRes.result.matches.tiOpnList
+                for (let i = 0; i < tiOpnList.length; i++) {
+                    let item = tiOpnList[i];
+                    if (item.orderablePartNumber === code) {
+                        matchedProduct = item
+                        break
+                    }
+                }
+            }
+            SocketIoCli.emit("update_product_base", matchedProduct)
+        }
+    })
 }
 
 

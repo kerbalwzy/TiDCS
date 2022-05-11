@@ -4,16 +4,18 @@
 __all__ = ["app", "socket_io", "init_socket_io", "ChromeExtWorker", "TaskBase"]
 
 import gc
-import time
-import uuid
+import random
 from datetime import datetime
+from threading import Thread
 
 from flask import Flask, current_app, request
 from flask_socketio import SocketIO, emit
+from sqlalchemy import or_
 
-from backend.http_apis import httpApi
-from backend.utils.u_time import utc2cn
 from backend.consts import ChromeExtWorkerPool, SidNetDelayLastPintAt
+from backend.http_apis import httpApi
+from backend.models import Product, db
+from backend.utils.u_time import utc2cn
 from config import Config
 from utils.u_singleton import synchronized
 
@@ -33,27 +35,50 @@ def ping():
         socket_io.sleep(5)
 
 
-def clear_expire_task():
+# 定时自动垃圾回收
+def clock_auto_gc():
     while True:
-        expire_tasks = list()
-        for worker in ChromeExtWorkerPool.values():
-            for task in worker.tasks_pool.values():
-                if int(time.time()) - task.start_at > 3600:
-                    expire_tasks.append(task)
-        for task in expire_tasks:
-            task.ext_worker.do(command="task_finish", task_id=task.task_id)
-            task.ext_worker.tasks_pool.pop(task.task_id, None)  #
-            task.ext_worker = None
-            del task
-        # 调用垃圾回收
+        # 调用垃圾回收, 每小时调用一次
         gc.collect()
-        socket_io.sleep(1800)
+        socket_io.sleep(3600)
 
 
-# 常驻后台的Ping事件
-socket_io.start_background_task(ping)
-# 常驻后台的内存回收事件
-socket_io.start_background_task(clear_expire_task)
+# 平均随机分配任务
+def random_dispatch_task(workers, tasks):
+    res = {}
+    while True:
+        if len(tasks) == 0:
+            break
+        for item in workers:
+            if len(tasks) == 0:
+                break
+            pop_index = random.randint(0, len(tasks) - 1)
+            res.setdefault(item, []).append(tasks.pop(pop_index))
+    return res
+
+
+# 定时自动获取产品基本信息
+def clock_fill_product_base_info():
+    app.app_context().push()
+    while True:
+        db.session.commit()  # 需要显示commit以读取数据库的最新数据
+        products = db.session.query(Product).filter(
+            or_(Product.desc.is_(None), Product.desc == ""),
+            Product.deleteTime.is_(None)
+        ).all()
+        current_app.logger.info(f"定时更新产品基本信息，需要更新的产品记录 {len(products)} 条")
+        # 平均随机分配给在线的各个客户端
+        workers = ChromeExtWorkerPool.keys()
+        all_tasks = [{"code": item.code} for item in products]
+        if len(workers) == 0 or len(all_tasks) == 0:
+            socket_io.sleep(10)  # 休眠
+            continue
+        for sid, tasks in random_dispatch_task(workers=workers, tasks=all_tasks).items():
+            for item in tasks:
+                socket_io.emit("spider_product_base", item)
+                socket_io.sleep(1)
+        # 休眠
+        socket_io.sleep(10)
 
 
 def init_socket_io():
@@ -111,10 +136,10 @@ def init_socket_io():
         #     "Worker Offline, SID={}\n{}".format(request.sid, json.dumps(params, indent=True))
         # )
         worker = ChromeExtWorkerPool.pop(request.sid, None)
-        if worker:
-            # 清除worker存储的任务, 解除引用关系, 避免循环引用
-            for item in worker.tasks_pool.values():
-                item.finish()
+
+    @socket_io.event
+    def auto_login_fail(params):
+        pass
 
     @socket_io.event
     def update_cart(params):
@@ -124,20 +149,34 @@ def init_socket_io():
             worker.last_online_at = utc2cn(datetime.utcnow())
 
     @socket_io.event
-    def worker_callback(params):
-        """
-        插件客户端的callback数据
-        """
-        # current_app.logger.debug(
-        #     "Worker Callback, SID={}\n{}".format(request.sid, json.dumps(params, indent=True))
-        # )
-        worker = ChromeExtWorkerPool.get(request.sid, None)
-        if worker:
-            worker.callback(task_id=params["task_id"], params=params)
+    def update_product_base(data):
 
-    @socket_io.event
-    def auto_login_fail(params):
-        pass
+        # 多线程更新数据
+        def update_data(params):
+            with app.app_context():
+                product = db.session.query(Product).filter(Product.code == params["orderablePartNumber"]).first()
+                if product:
+                    product.desc = params["partDescription"]
+                    product.price = params["price"]["basePrice"]
+                    product.currency = params["price"]["currencyCode"]
+                    product.baseQty = params["price"]["baseQty"]
+                    product.orderLimit = params["orderLimit"]
+                    db.session.add(product)
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    current_app.logger.error(e)
+                    db.session.rollback()
+
+        t = Thread(target=update_data, args=(data,))
+        t.setDaemon(True)
+        t.start()
+
+    # 常驻后台的事件
+    socket_io.start_background_task(ping)
+    socket_io.start_background_task(clock_auto_gc)
+    socket_io.start_background_task(clock_fill_product_base_info)
+
 
 
 class ChromeExtWorker:
@@ -180,118 +219,3 @@ class ChromeExtWorker:
         item["netDelay"] = self.net_delay
         item["cart"] = self.cart
         return item
-
-    def tasks_status(self):
-        data = list()
-        for item in self.tasks_pool.values():
-            data.append(item.status())
-        return data
-
-    def do(self, command: str, params: dict = None, task_id: str = None, monopoly: bool = False, event: str = None):
-        event = event or self.EVENT_TASK_EXEC
-        socket_io.emit(event,
-                       {
-                           "company_name": self.company_name,
-                           "task_id": task_id,
-                           "monopoly": monopoly,
-                           "cmd": command,
-                           "params": params,
-                       },
-                       to=self.sid)
-
-    def callback(self, task_id, params):
-        task = self.tasks_pool.get(task_id)
-        if task:
-            task.do_callback(params)
-
-
-class TaskBase:
-    """
-    任务基类, 所有创建的业务任务都应该继承与整个基类
-    """
-    CUSTOM_STEP_SLEEP = 5  # 自定义的callback_sleep的睡眠时间,单位 秒
-
-    def __init__(self, worker: ChromeExtWorker, monopoly: bool = False):
-        self.task_id = str(uuid.uuid4())
-        self.monopoly = monopoly  # 是否为独占式任务
-        self.steps = []
-        self.current_step = 0
-        self.ext_worker = worker
-        self.ext_worker.tasks_pool[self.task_id] = self
-        self.start_at = int(time.time())
-
-    def status(self):
-        item = dict()
-        item["task_class"] = str(self.__class__)
-        item["task_id"] = self.task_id
-        item["steps"] = self.steps
-        item["current_step"] = self.current_step
-        return item
-
-    def add_step(self, command: str, params: dict, callback_func: str = "do_next"):
-        """
-        添加执行步骤的描述数据集
-        command: 插件要执行的命令
-        params: 执行参数
-        callback_func: 步骤执行成功后的回调函数
-        """
-        params["callback_func"] = callback_func
-        self.steps.append({
-            "task_id": self.task_id, "monopoly": self.monopoly,
-            "command": command, "params": params
-        })
-
-    def do_callback(self, params: dict):
-        """
-        执行任务的callback函数, 默认的callback函数为do_next,
-        如果调用的callback函数不是do_next,则也会在回调函数执行成功后再执行do_next
-        """
-        try:
-            if params.get("exec_error"):
-                raise RuntimeError(params["exec_error"])
-            # 默认的回调函数是执行下一步
-            callback_func_name = params.get("callback_func", "do_next")
-            callback_func = getattr(self, callback_func_name, None)
-            if not callback_func:
-                raise RuntimeError("{} callback调用的函数{}未找到, 无法正常执行".format(
-                    self.__class__, callback_func_name)
-                )
-            if not callable(callback_func):
-                raise RuntimeError("{} callback调用的函数{}不是一个callable对象, 无法正常执行".format(
-                    self.__class__, callback_func_name)
-                )
-            # 执行指定的callback函数
-            callback_func(params.get("callback_params", None))
-            # current_app.logger.debug(params)
-        except Exception as e:
-            current_app.logger.error(e, exc_info=True)
-            # TODO 可以在这里添加自定义的外部通知功能，建议异步执行
-            self.finish()  # 出现步骤执行异常, 直接结束任务
-        else:
-            # 当回调函数不为do_next时, 需要在执行完回调函数后, 继续执行do_next方法以调用下一步操作
-            if callback_func_name != "do_next":
-                self.do_next()
-
-    def finish(self):
-        #  结束任务, 从worker中删除本任务, 并解除引用关系
-        self.ext_worker.do(command="task_finish", task_id=self.task_id)
-        self.ext_worker.tasks_pool.pop(self.task_id, None)  #
-        self.ext_worker = None
-        current_app.logger.debug("任务:{}-{} 结束".format(self.__class__.__name__, self.task_id))
-
-    def do_next(self, *args, **kwargs):
-        """
-        执行任务的下一步
-        """
-        self.current_step += 1
-        if self.current_step < len(self.steps) + 1:
-            current_app.logger.debug("任务:{}-{} 执行第{}步".format(self.__class__.__name__, self.task_id, self.current_step))
-            self.ext_worker.do(**self.steps[self.current_step - 1])
-        else:
-            self.finish()
-
-    def run(self):
-        """
-        启动任务, 实际上就是指定任务的第一步
-        """
-        self.do_next()

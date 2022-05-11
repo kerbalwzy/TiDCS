@@ -17,6 +17,9 @@
           <v-btn color="success" @click="excelUploadDialog=true">Excel上传</v-btn>
         </v-list-item>
       </template>
+      <template v-slot:item.price="{item}">
+        <span v-if="item.price">{{ parseFloat(item.price) }} {{ item.currency }}</span>
+      </template>
       <template v-slot:item.actions="{item}">
         <v-btn x-small color="primary" @click="showEditPopup(item)">编辑</v-btn>
       </template>
@@ -30,7 +33,7 @@
               <v-text-field outlined dense label="产品型号" readonly v-model="editItem.code"></v-text-field>
             </v-list-item>
             <v-list-item>
-              <v-text-field outlined dense label="抢购上限(0值表示不设上限)" type="number" v-model="editItem.wantLimit"
+              <v-text-field outlined dense label="抢购上限(0值表示停止抢购)" type="number" v-model="editItem.wantLimit"
                             :rules="[v => !!v || '必填', v => parseInt(v) >=0 || '数值要求大于等于0']"></v-text-field>
             </v-list-item>
           </v-form>
@@ -95,7 +98,7 @@ export default {
         {text: "更新时间", value: "updateTime", sortable: false},
         {text: "产品描述", value: "desc", sortable: false},
         {text: "产品单价", value: "price", sortable: false},
-        {text: "下单上限", value: "orderLimit", sortable: false},
+        {text: "加购上限", value: "orderLimit", sortable: false},
         {text: "操作", value: "actions", sortable: false},
       ]
     }
