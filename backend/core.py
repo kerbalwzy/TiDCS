@@ -182,7 +182,7 @@ def init_socket_io():
     def update_cart(params):
         worker = ChromeExtWorkerPool.get(request.sid, None)
         if worker:
-            worker.cart = params if params.get("Items") else {}
+            worker.cart = params
             worker.last_online_at = utc2cn(datetime.utcnow())
 
     @socket_io.event
@@ -232,7 +232,8 @@ def init_socket_io():
                     # 获取所有在线账号购物车内的产品
                     all_ti_cart_products = {}
                     for worker in ChromeExtWorkerPool.values():
-                        for cart_products in worker.cart.get("Items", []):
+                        ti_cart = worker.cart.get("Items") or []
+                        for cart_products in ti_cart:
                             all_ti_cart_products[cart_products["OpnId"]] = True
                     if all_ti_cart_products.get(item.code):
                         # 购物车中已经存在的产品不重复抢购
