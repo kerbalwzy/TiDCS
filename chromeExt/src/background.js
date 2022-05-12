@@ -10,6 +10,10 @@ function request(option, callback) {
     xhr.onreadystatechange = function () {
         // In local files, status is 0 upon success in Mozilla Firefox
         if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 403) {
+                workerOffline()
+                tiAutoLogin()
+            }
             callback ? callback(xhr) : null
         }
     };
@@ -29,6 +33,7 @@ const TiAddtoCartSource = "tiAddtoCartSource"
 const BackendSrvAddr = 'ws://175.178.246.168';
 let TiAutoLoginIng = false;
 let TiGetProfileClock = null;
+let TiKeepStatusClock = null;
 
 console.debug("ExtensionId: " + myExtensionId);
 
@@ -39,10 +44,15 @@ let SocketIoCli = io(BackendSrvAddr, {
 
 SocketIoCli.on("connect", function () {
     tiProfile()
+    tiCart()
     if (TiGetProfileClock) {
         clearInterval(TiGetProfileClock)
     }
     TiGetProfileClock = setInterval(tiProfile, 1000 * 60) // 每分钟检查一次登录状态
+    if (TiKeepStatusClock) {
+        clearInterval(TiKeepStatusClock)
+    }
+    TiKeepStatusClock = setInterval(tiKeepStatus, 1000 * 60 * 5) // 每5分钟检测一次购物车token状态
 })
 
 SocketIoCli.on("error", function (error) {
@@ -360,12 +370,12 @@ function tiAddProduct2Cart(params) {
 }
 
 function openTiLoginPage(tabId) {
-    chrome.tabs.update(tabId, {url: `https://${tiOrigin}/secure-link-forward/?gotoUrl=https://${tiOrigin}`}, () => {
+    chrome.tabs.update(tabId, {url: `https://${tiOrigin}/samlsinglesignon/saml/alias/ticn/?site=ti&samlPage=cart`}, () => {
         // 设置定时任务监听tab的加载状态，记载完成后再进行下一步
         let tabStatusClock = setInterval(function () {
             console.log("check tab status")
             chrome.tabs.get(tabId, function (tab) {
-                if (tab.status === "complete") {
+                if (tab.status === "complete" && tab.url === "https://login.ti.com/idp/SSO.saml2") {
                     clearInterval(tabStatusClock);
                     chrome.tabs.sendMessage(tabId, {
                         recipient: 'content',
@@ -380,6 +390,8 @@ function openTiLoginPage(tabId) {
         }, 2000)
     })
 }
+
+window.tiAutoLogin = tiAutoLogin
 
 function tiAutoLogin() {
     // 获取当前所有的tab
@@ -476,6 +488,44 @@ function tiLogin() {
     })
 }
 
+function openTiCartPage(tabId) {
+    chrome.tabs.update(tabId, {url: `https://${tiOrigin}/`})
+}
+
+window.tiKeepStatus = tiKeepStatus
+
+function tiKeepStatus() {
+    // 控制浏览器访问购物车详情页面, 以获取最新的有效Token
+    if (TiAutoLoginIng) {
+        return false
+    }
+    chrome.tabs.query({}, (tabs) => {
+        let workTab = null
+        for (let i = 0; i < tabs.length; i++) {
+            if (tabs[i].url.indexOf('chrome-extension') === -1) {
+                workTab = tabs[i]
+                break
+            }
+        }
+        if (workTab) {
+            openTiLoginPage(workTab.id)
+        } else {
+            chrome.tabs.create({active: false, url: `https://${tiOrigin}`}, (tab) => {
+                // 设置定时任务监听tab的加载状态，记载完成后再进行下一步
+                let tabStatusClock = setInterval(function () {
+                    console.log("check tab status")
+                    chrome.tabs.get(tab.id, function (tab) {
+                        if (tab.status === "complete") {
+                            clearInterval(tabStatusClock);
+                            openTiCartPage(tab.id)
+                        }
+                    })
+                }, 2000)
+            })
+        }
+    })
+
+}
 
 function initBackground() {
     let tiLoginBtn = document.getElementById('tiLogin');

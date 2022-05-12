@@ -16,6 +16,7 @@ from sqlalchemy import or_
 from backend.consts import ChromeExtWorkerPool, SidNetDelayLastPintAt
 from backend.http_apis import httpApi
 from backend.models import Product, db
+from backend.utils.u_telegram import tg_bot_send_text
 from backend.utils.u_time import utc2cn
 from config import Config
 from utils.u_singleton import synchronized
@@ -175,8 +176,12 @@ def init_socket_io():
     @socket_io.event
     def auto_login_fail(params):
         worker = ChromeExtWorkerPool.pop(request.sid, None)
-        current_app.logger.info(f"Ti自动登录失败，账号:{worker.email}, 错误内容:{params['errmsg']}")
-        pass
+        msg = f"Ti自动登录失败，账号:{worker.email}, 错误内容:{params['errmsg']}"
+        current_app.logger.info(msg)
+        #
+        t = Thread(target=tg_bot_send_text, args=(f"{msg}, 请开发人员尽快排查问题",))
+        t.setDaemon(True)
+        t.start()
 
     @socket_io.event
     def update_cart(params):
@@ -257,7 +262,12 @@ def init_socket_io():
     @socket_io.event
     def add_product2cart_ok(data):
         worker = ChromeExtWorkerPool.pop(request.sid, None)
-        current_app.logger.info(f"产品抢购成功，下单账号:{worker.email}, 产品型号:{data['code']}")
+        msg = f"产品抢购成功，下单账号:{worker.email}, 产品型号:{data['code']}"
+        current_app.logger.info(msg)
+        #
+        t = Thread(target=tg_bot_send_text, args=(f"{msg}, 请尽快进行后续的人工处理",))
+        t.setDaemon(True)
+        t.start()
 
     # 常驻后台的事件
     socket_io.start_background_task(ping)
