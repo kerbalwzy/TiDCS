@@ -18,7 +18,7 @@ class Config:
     SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://tidcs:tidcs123@127.0.0.1:3306/tidcs?charset=utf8mb4"
     SQLALCHEMY_POOL_RECYCLE = 60 * 30
     SQLALCHEMY_POOL_SIZE = 100
-    SQLALCHEMY_MAX_OVERFLOW = 100
+    SQLALCHEMY_MAX_OVERFLOW = 500
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     # 跨域相关配置

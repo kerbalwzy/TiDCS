@@ -97,7 +97,7 @@ export default {
     if (this.clock) {
       clearInterval(this.clock)
     }
-    this.clock = setInterval(this.getWorkers, 1000 * 60)
+    this.clock = setInterval(this.getWorkers, 1000 * 30)
   },
   deactivated() {
     if (this.clock) {

@@ -1,9 +1,10 @@
 # -*- coding:utf-8 -*-
 # @Author: wzy
 # 核心模块, 用户创建Flask App对象和Flask-SocketIo App对象, 并完成一些基本功能
-__all__ = ["app", "socket_io", "init_socket_io", "ChromeExtWorker", "TaskBase"]
+__all__ = ["app", "socket_io", "init_socket_io", "ChromeExtWorker"]
 
 import gc
+import math
 import random
 from datetime import datetime
 from threading import Thread
@@ -58,7 +59,7 @@ def random_dispatch_task(workers, tasks):
 
 
 # 定时自动获取产品基本信息
-def clock_fill_product_base_info():
+def clock_spider_product_base():
     app.app_context().push()
     while True:
         db.session.commit()  # 需要显示commit以读取数据库的最新数据
@@ -66,19 +67,57 @@ def clock_fill_product_base_info():
             or_(Product.desc.is_(None), Product.desc == ""),
             Product.deleteTime.is_(None)
         ).all()
-        current_app.logger.info(f"定时更新产品基本信息，需要更新的产品记录 {len(products)} 条")
         # 平均随机分配给在线的各个客户端
         workers = ChromeExtWorkerPool.keys()
         all_tasks = [{"code": item.code} for item in products]
         if len(workers) == 0 or len(all_tasks) == 0:
-            socket_io.sleep(10)  # 休眠
+            socket_io.sleep(25)  # 休眠
             continue
+        current_app.logger.info(f"定时更新产品基本信息，需要更新的产品记录 {len(products)} 条")
         for sid, tasks in random_dispatch_task(workers=workers, tasks=all_tasks).items():
             for item in tasks:
-                socket_io.emit("spider_product_base", item)
+                socket_io.emit("spider_product_base", item, to=sid)
                 socket_io.sleep(1)
         # 休眠
+        socket_io.sleep(25)
+
+
+# 定时更新购物车信息
+def clock_spider_ti_cart():
+    while True:
+        socket_io.emit("spider_cart")
         socket_io.sleep(10)
+
+
+# 定时更新产品库存
+def clock_spider_product_ivt():
+    app.app_context().push()
+    while True:
+        db.session.commit()  # 需要显示commit以读取数据库的最新数据
+        products = db.session.query(Product).filter(
+            Product.orderLimit.isnot(None),
+            Product.deleteTime.is_(None)
+        ).all()
+        workers = ChromeExtWorkerPool.keys()
+        all_tasks = [item.code for item in products]
+        if len(workers) == 0 or len(all_tasks) == 0:
+            socket_io.sleep(10)  # 休眠
+            continue
+        current_app.logger.info(f"定时更新产品库存，需要更新的产品记录 {len(products)} 条")
+        try:
+            for sid, tasks in random_dispatch_task(workers=workers, tasks=all_tasks).items():
+                # 每100条记录分配为一组任务
+                group_limit = 500
+                group_n = math.ceil(len(tasks) / group_limit)
+                for i in range(group_n):
+                    start = i * group_limit
+                    end = (i + 1) * group_limit
+                    group_tasks = tasks[start:end]
+                    socket_io.emit("spider_product_ivt", {"codes": group_tasks}, to=sid)
+                    socket_io.sleep(1)  # 休眠
+        except Exception as e:
+            current_app.logger.error(e)
+        socket_io.sleep(10)  # 休眠
 
 
 def init_socket_io():
@@ -91,10 +130,6 @@ def init_socket_io():
     def disconnect():
         current_app.logger.debug("Disconnect, SID={}".format(request.sid))
         worker = ChromeExtWorkerPool.pop(request.sid, None)
-        if worker:
-            # 清除worker存储的任务, 解除引用关系, 避免循环引用
-            for item in worker.tasks_pool.values():
-                item.finish()
 
     @socket_io.event
     def pong():
@@ -139,13 +174,15 @@ def init_socket_io():
 
     @socket_io.event
     def auto_login_fail(params):
+        worker = ChromeExtWorkerPool.pop(request.sid, None)
+        current_app.logger.info(f"Ti自动登录失败，账号:{worker.email}, 错误内容:{params['errmsg']}")
         pass
 
     @socket_io.event
     def update_cart(params):
         worker = ChromeExtWorkerPool.get(request.sid, None)
         if worker:
-            worker.cart = params
+            worker.cart = params if params.get("Items") else {}
             worker.last_online_at = utc2cn(datetime.utcnow())
 
     @socket_io.event
@@ -172,11 +209,61 @@ def init_socket_io():
         t.setDaemon(True)
         t.start()
 
+    @socket_io.event
+    def update_product_ivt(data):
+        if not data:
+            return
+        codes = []
+        code2ivt = {}
+        for k, v in data.items():
+            codes.append(k)
+            code2ivt[k] = v["currentInventory"]
+        with app.app_context():
+            products = db.session.query(Product).filter(
+                Product.deleteTime.is_(None),
+                Product.code.in_(codes)
+            ).all()
+            for item in products:
+                item.inventory = code2ivt[item.code]
+                item.updateTime = datetime.utcnow()
+                db.session.add(item)
+                # 尝试对有库存的，需要抢购的，并还未加入到过购物车的产品进行抢购操作
+                if item.wantLimit > 0 and item.inventory > 0:
+                    # 获取所有在线账号购物车内的产品
+                    all_ti_cart_products = {}
+                    for worker in ChromeExtWorkerPool.values():
+                        for cart_products in worker.cart.get("Items", []):
+                            all_ti_cart_products[cart_products["OpnId"]] = True
+                    if all_ti_cart_products.get(item.code):
+                        # 购物车中已经存在的产品不重复抢购
+                        current_app.logger.debug(f"跳过购物车已存在的产品记录:{item.code}")
+                        continue
+                    # 发起抢购任务
+                    add_cart_count = item.wantLimit if item.wantLimit <= item.inventory else item.inventory
+                    add_cart_count = add_cart_count if add_cart_count <= item.orderLimit else item.orderLimit
+                    current_app.logger.debug(f"发起产品抢购任务:{item.code}")
+                    socket_io.emit(
+                        "ti_add_product2cart",
+                        {"code": item.code, "quantity": add_cart_count, "currency": item.currency or "USD"},
+                        to=request.sid,
+                    )
+            try:
+                db.session.commit()
+            except Exception as e:
+                current_app.logger.error(e)
+                db.session.rollback()
+
+    @socket_io.event
+    def add_product2cart_ok(data):
+        worker = ChromeExtWorkerPool.pop(request.sid, None)
+        current_app.logger.info(f"产品抢购成功，下单账号:{worker.email}, 产品型号:{data['code']}")
+
     # 常驻后台的事件
     socket_io.start_background_task(ping)
     socket_io.start_background_task(clock_auto_gc)
-    socket_io.start_background_task(clock_fill_product_base_info)
-
+    socket_io.start_background_task(clock_spider_product_base)
+    socket_io.start_background_task(clock_spider_ti_cart)
+    socket_io.start_background_task(clock_spider_product_ivt)
 
 
 class ChromeExtWorker:

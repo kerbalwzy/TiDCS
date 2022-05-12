@@ -21,6 +21,7 @@ export function request(config, success, failure) {
     if (err.response.status === 403 && err.response.data.errcode === 40301) {
       router.push("/login")
     } else {
+      store.commit('setErrmsg', err.response.data || err.response.status)
       failure ? failure(err) : null
     }
   })

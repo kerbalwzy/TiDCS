@@ -220,7 +220,7 @@ export default {
     if (this.clock) {
       clearInterval(this.clock)
     }
-    this.clock = setInterval(this.getProducts, 1000 * 60)
+    this.clock = setInterval(this.getProducts, 1000 * 5)
   },
   deactivated() {
     if (this.clock) {

@@ -23,7 +23,8 @@ function request(option, callback) {
 
 // https://developer.chrome.com/docs/extensions/reference/runtime/#property-id 
 const myExtensionId = chrome.runtime.id;
-const tiOrigin = "www.ti.com"
+const tiOrigin = "www.ti.com.cn"
+const TiAddtoCartSource = "tiAddtoCartSource"
 // const BackendSrvAddr = 'ws://127.0.0.1:43998';
 const BackendSrvAddr = 'ws://175.178.246.168';
 let TiAutoLoginIng = false;
@@ -44,12 +45,28 @@ SocketIoCli.on("connect", function () {
     TiGetProfileClock = setInterval(tiProfile, 1000 * 60) // 每分钟检查一次登录状态
 })
 
+SocketIoCli.on("error", function (error) {
+    console.log(error)
+})
+
 SocketIoCli.on("ping", function () {
     SocketIoCli.emit("pong")
 })
 
 SocketIoCli.on("spider_product_base", function (params) {
     tiProductBase(params.code)
+})
+
+SocketIoCli.on("spider_product_ivt", function (params) {
+    tiProductIvt(params.codes)
+})
+
+SocketIoCli.on("spider_cart", function () {
+    tiCart()
+})
+
+SocketIoCli.on("ti_add_product2cart", function (params) {
+    tiAddProduct2Cart(params)
 })
 
 
@@ -160,7 +177,7 @@ function tiProfile() {
         } else {
             let tiProfileData = JSON.parse(xhr.responseText)
             workerOnline(tiProfileData)
-            tiCart() // 更新购物车
+            // tiCart() // 更新购物车
         }
     })
 }
@@ -238,6 +255,109 @@ function tiProductBase(code) {
     })
 }
 
+window.tiProductIvt = tiProductIvt
+
+function tiProductIvt(codes) {
+    if (TiAutoLoginIng) {
+        return false
+    }
+    let option = {
+        method: "POST",
+        url: `https://${tiOrigin}/avlmodel/api/inv-stock-forecast-info?locale=zh-CN`,
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify(codes),
+    }
+    request(option, (xhr) => {
+        if (xhr.status !== 200) {
+            console.log(`${tiOrigin}服务器异常，返回状态码${xhr.status}`)
+            return false
+        }
+        if (xhr.responseURL.indexOf('login.ti.com') > -1) {
+            // 未登录，则开启登录任务
+            workerOffline()
+            tiAutoLogin()
+        } else {
+            let ivtRes = JSON.parse(xhr.responseText)
+            SocketIoCli.emit("update_product_ivt", ivtRes)
+        }
+    })
+}
+
+window.tiAddProduct2Cart = tiAddProduct2Cart
+
+function tiAddProduct2Cart(params) {
+    if (TiAutoLoginIng) {
+        return false
+    }
+    // 先获取购物车的最新信息
+    let option = {
+        method: "GET",
+        url: `https://${tiOrigin}/occservices/v2/ti/viewCart?currency=CNY`
+    }
+    request(option, function (xhr) {
+        if (xhr.status !== 200) {
+            console.log(`${tiOrigin}服务器异常，返回状态码${xhr.status}`)
+            return false
+        }
+        if (xhr.responseURL.indexOf('login.ti.com') > -1) {
+            // 未登录，则开启登录任务
+            workerOffline()
+            tiAutoLogin()
+        } else {
+            let tiCartData = JSON.parse(xhr.responseText)
+            SocketIoCli.emit("update_cart", tiCartData)
+            //
+            let canAdd = true
+            if (tiCartData.Items) { // 如果购物车存在产品，则需要检测是否是重复加购物车
+                for (let i = 0; i < tiCartData.Items.length; i++) {
+                    let item = tiCartData.Items[i]
+                    if (item.OpnId === params.code) {
+                        canAdd = false
+                        console.log("跳过重复加购物的操作")
+                        break
+                    }
+                }
+            }
+            if (canAdd) {
+                request(
+                    {
+                        method: "POST",
+                        url: `https://${tiOrigin}/occservices/v2/ti/addtocart`,
+                        headers: {"content-type": "application/json"},
+                        body: JSON.stringify({
+                            cartRequestList: [
+                                {
+                                    packageOption: null,
+                                    opnId: params.code,
+                                    quantity: params.quantity,
+                                    tiAddtoCartSource: TiAddtoCartSource,
+                                    sparam: ""
+                                }
+                            ],
+                            currency: params.currency
+                        })
+                    },
+                    (xhr) => {
+                        if (xhr.status !== 200) {
+                            console.log(`${tiOrigin}服务器异常，返回状态码${xhr.status}`)
+                            return false
+                        }
+                        if (xhr.responseURL.indexOf('login.ti.com') > -1) {
+                            // 未登录，则开启登录任务
+                            workerOffline()
+                            tiAutoLogin()
+                        } else {
+                            let addCartRes = JSON.parse(xhr.responseText)
+                            if (addCartRes.statusCode === "200") {
+                                SocketIoCli.emit("add_product2cart_ok", params)
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    })
+}
 
 function openTiLoginPage(tabId) {
     chrome.tabs.update(tabId, {url: `https://${tiOrigin}/secure-link-forward/?gotoUrl=https://${tiOrigin}`}, () => {

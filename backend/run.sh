@@ -8,8 +8,8 @@ elif [ "$1" == "start" ]; then
     echo '激活虚拟环境'
     cd /root/TiDCS/backend
     echo '启动进程'
-#    python main.py  > /dev/null 2>&1 &
-    python main.py
+    python main.py  > /dev/null 2>&1 &
+#    python main.py
 else
     echo 'Usage: bash run.sh [start, stop]'
 fi
