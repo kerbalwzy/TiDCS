@@ -51,13 +51,17 @@ def parse_excel_row(row: Iterator, row_index: int, index_header_map: Dict[int, s
         cn_key = index_header_map.get(index)
         if cn_key not in ["产品型号", "抢购上限"]:
             continue
+        value = None
         if cn_key == "产品型号":
             assert isinstance(col.value, str), ValueError(f"数据列[产品型号]， 第{row_index}行, 要求数据类型为文本字符串")
-            temp[cn_key] = col.value.strip()
+            value = col.value.strip()
         if cn_key == "抢购上限":
             assert isinstance(col.value, int) or isinstance(col.value, float), ValueError(
                 f"数据列[产品型号]， 第{row_index}行, 要求数据类型为数值")
-            temp[cn_key] = int(col.value)
+            value = int(col.value)
+        temp[cn_key] = value
+    if not temp["产品型号"] or not temp["抢购上限"]:
+        return {}
     return temp
 
 
@@ -83,6 +87,8 @@ def upload_ti_products_excel():
         row_index += 1
         try:
             item = parse_excel_row(row=r, row_index=row_index, index_header_map=index_header_map)
+            if not item:
+                continue
         except Exception as e:
             return json_resp(errcode=RespCode.ParamsError, msg=e.__str__())
         else:
