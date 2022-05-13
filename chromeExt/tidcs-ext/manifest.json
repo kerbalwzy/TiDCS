@@ -33,5 +33,5 @@
       "run_at": "document_end"
     }
   ]
-  //  "update_url": "http://nowkin.com:43999/chrome-ext-update/AmzDataHelperUpdate.xml"
+  //  "update_url": ""
 }

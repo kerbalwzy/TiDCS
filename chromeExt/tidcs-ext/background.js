@@ -11,7 +11,6 @@ function request(option, callback) {
         // In local files, status is 0 upon success in Mozilla Firefox
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 403) {
-                workerOffline()
                 tiAutoLogin()
             }
             callback ? callback(xhr) : null
@@ -28,7 +27,7 @@ function request(option, callback) {
 // https://developer.chrome.com/docs/extensions/reference/runtime/#property-id 
 const myExtensionId = chrome.runtime.id;
 const tiOrigin = "www.ti.com.cn"
-const TiAddtoCartSource = "tiAddtoCartSource"
+const TiAddtoCartSource = "ti.com-productfolder"
 // const BackendSrvAddr = 'ws://127.0.0.1:43998';
 const BackendSrvAddr = 'ws://175.178.246.168';
 let TiAutoLoginIng = false;
@@ -43,8 +42,15 @@ let SocketIoCli = io(BackendSrvAddr, {
 });
 
 SocketIoCli.on("connect", function () {
+    let email = localStorage.getItem("email")
+    let password = localStorage.getItem("password")
+    if (!email || !password) {
+        console.log("未保存登录邮箱或密码")
+        SocketIoCli.emit("auto_login_fail", {errmsg: "未保存登录邮箱或密码"})
+        return false
+    }
     tiProfile()
-    tiCart()
+    // tiCart()
     if (TiGetProfileClock) {
         clearInterval(TiGetProfileClock)
     }
@@ -92,6 +98,8 @@ chrome.runtime.onMessage.addListener(
                     TiAutoLoginIng = false
                     if (message.errmsg) {
                         SocketIoCli.emit("auto_login_fail", {errmsg: message.errmsg})
+                    } else {
+                        tiProfile()
                     }
                     break;
             }
@@ -370,35 +378,48 @@ function tiAddProduct2Cart(params) {
 }
 
 function openTiLoginPage(tabId) {
-    chrome.tabs.update(tabId, {url: `https://${tiOrigin}/samlsinglesignon/saml/alias/ticn/?site=ti&samlPage=cart`}, () => {
-        // 设置定时任务监听tab的加载状态，记载完成后再进行下一步
-        let tabStatusClock = setInterval(function () {
-            console.log("check tab status")
-            chrome.tabs.get(tabId, function (tab) {
-                if (tab.status === "complete" && tab.url === "https://login.ti.com/idp/SSO.saml2") {
-                    clearInterval(tabStatusClock);
-                    chrome.tabs.sendMessage(tabId, {
-                        recipient: 'content',
-                        task: {
-                            cmd: "tiLogin",
-                            email: localStorage.getItem("email"),
-                            password: localStorage.getItem("password")
+    chrome.tabs.update(tabId,
+        {url: `https://${tiOrigin}/secure-link-forward/?gotoUrl=https://${tiOrigin}`},
+        () => {
+            // 设置定时任务监听tab的加载状态，记载完成后再进行下一步
+            let tabStatusClock = setInterval(function () {
+                console.log("openTiLoginPage check tab status")
+                chrome.tabs.get(tabId, function (tab) {
+                    if (tab.status === "complete") {
+                        clearInterval(tabStatusClock);
+                        if (tab.url.startsWith("https://login.ti.com")) {
+                            let email = localStorage.getItem("email")
+                            let password = localStorage.getItem("password")
+                            if (!email || !password) {
+                                console.log("未保存登录邮箱或密码")
+                                return false
+                            }
+                            chrome.tabs.sendMessage(tabId, {
+                                recipient: 'content',
+                                task: {
+                                    cmd: "tiLogin",
+                                    email: email,
+                                    password: password
+                                }
+                            })
                         }
-                    })
-                }
-            })
-        }, 2000)
-    })
+                    }
+                })
+            }, 2000)
+        })
 }
 
 window.tiAutoLogin = tiAutoLogin
 
 function tiAutoLogin() {
+    if (TiAutoLoginIng) {
+        return false
+    }
     // 获取当前所有的tab
     TiAutoLoginIng = true;
     setTimeout(() => {
-        TiAutoLoginIng = false // 自动登录的超时时间为三分钟
-    }, 1000 * 60 * 3)
+        TiAutoLoginIng = false // 自动登录的超时时间为2
+    }, 1000 * 60 * 2)
     chrome.tabs.query({}, (tabs) => {
         let workTab = null
         for (let i = 0; i < tabs.length; i++) {
@@ -489,7 +510,35 @@ function tiLogin() {
 }
 
 function openTiCartPage(tabId) {
-    chrome.tabs.update(tabId, {url: `https://${tiOrigin}/`})
+    chrome.tabs.update(tabId,
+        {url: `https://${tiOrigin}/store/ti/en/cart`},
+        () => {
+            // 设置定时任务监听tab的加载状态，记载完成后再进行下一步
+            let tabStatusClock = setInterval(function () {
+                console.log("openTiCartPage check tab status")
+                chrome.tabs.get(tabId, function (tab) {
+                    if (tab.status === "complete") {
+                        clearInterval(tabStatusClock);
+                        if (tab.url.startsWith("https://login.ti.com")) {
+                            let email = localStorage.getItem("email")
+                            let password = localStorage.getItem("password")
+                            if (!email || !password) {
+                                console.log("未保存登录邮箱或密码")
+                                return false
+                            }
+                            chrome.tabs.sendMessage(tabId, {
+                                recipient: 'content',
+                                task: {
+                                    cmd: "tiLogin",
+                                    email: email,
+                                    password: password
+                                }
+                            })
+                        }
+                    }
+                })
+            }, 2000)
+        })
 }
 
 window.tiKeepStatus = tiKeepStatus
@@ -508,7 +557,7 @@ function tiKeepStatus() {
             }
         }
         if (workTab) {
-            openTiLoginPage(workTab.id)
+            openTiCartPage(workTab.id)
         } else {
             chrome.tabs.create({active: false, url: `https://${tiOrigin}`}, (tab) => {
                 // 设置定时任务监听tab的加载状态，记载完成后再进行下一步

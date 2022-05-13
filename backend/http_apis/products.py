@@ -27,7 +27,7 @@ def list_products():
         filters.append(Product.code.like(f"%{params['code']}%"))
     if params["desc"]:
         filters.append(Product.desc.like(f"%{params['desc']}%"))
-    query = db.session.query(Product).filter(*filters).order_by(Product.createTime.desc())
+    query = db.session.query(Product).filter(*filters).order_by(Product.createTime.desc()).order_by(Product.code.asc())
     result, count = query_paginate(query=query, page=params["page"], limit=params["limit"])
     # 解析数据, 并检查数据
     data = list()

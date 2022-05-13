@@ -1,3 +1,4 @@
 需要通过页面元素操作完成
 第一步打开页面：https://www.ti.com.cn/
 第二步打开地址：https://www.ti.com.cn/secure-link-forward/?gotoUrl=https%3A%2F%2Fwww.ti.com.cn%2F
+"https://www.ti.com/fak_message_atc.html"

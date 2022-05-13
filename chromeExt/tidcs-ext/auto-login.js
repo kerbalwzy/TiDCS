@@ -146,7 +146,7 @@ function autoLogin(email, password) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (sender.id === myExtensionId && message.recipient === 'content') {
             let task = message.task;
-            // console.log(task)
+            console.log(task)
             switch (task.cmd) {
                 case "tiLogin":
                     autoLogin(task.email, task.password)

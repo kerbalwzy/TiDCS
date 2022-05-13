@@ -16,9 +16,9 @@ class Config:
     # MySQL相关配置项
     # 默认数据库连接
     SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://tidcs:tidcs123@127.0.0.1:3306/tidcs?charset=utf8mb4"
-    SQLALCHEMY_POOL_RECYCLE = 60 * 30
-    SQLALCHEMY_POOL_SIZE = 100
-    SQLALCHEMY_MAX_OVERFLOW = 500
+    SQLALCHEMY_POOL_RECYCLE = 60 * 15
+    SQLALCHEMY_POOL_SIZE = 50
+    SQLALCHEMY_MAX_OVERFLOW = 200
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     # 跨域相关配置
