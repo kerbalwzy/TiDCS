@@ -7,8 +7,6 @@ axios.defaults.withCredentials = true
 export function request(config, success, failure) {
   const instance = axios.create({
     baseURL: store.state.baseURL,
-    // baseURL: window.origin,
-    // timeout: 5000,
     withCredentials: true
   })
   instance(config).then((res) => {

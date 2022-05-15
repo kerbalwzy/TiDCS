@@ -13,12 +13,13 @@ const store = new Vuex.Store({
         path: "/",
         title: "在线插件",
       },
-      {
-        path: "/products",
-        title: "产品列表"
-      }
+      // {
+      //   path: "/products",
+      //   title: "产品列表"
+      // }
     ],
     baseURL: window.origin,
+    // baseURL: "https://service-rixooyu8-1255484415.hk.apigw.tencentcs.com",
     errmsg: "",
   },
   mutations: {

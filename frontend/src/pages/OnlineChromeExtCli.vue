@@ -6,6 +6,10 @@
         <span v-if="!item.cart.CartId">未获取</span>
         <v-btn v-else small @click="showCart(item.cart)">{{ item.cart.CartTotal }}元</v-btn>
       </template>
+      <template v-slot:item.Cookies="{item}">
+        <span v-if="!item.cookies_str">未获取</span>
+        <v-btn v-else small @click="showCookies(item)" color="primary">立即查看</v-btn>
+      </template>
     </v-data-table>
     <v-dialog v-model="cartDialog" max-width="800px">
       <v-card>
@@ -26,6 +30,22 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="cookieDialog">
+      <v-card>
+        <v-card-title>Ti-Cookies</v-card-title>
+        <v-list-item>
+          <v-textarea outlined dense label="Cookie字符串" v-model="cookies_str" readonly></v-textarea>
+        </v-list-item>
+        <v-list-item>
+          <v-data-table :headers="cookiesHeaders" :items="cookies" :items-per-page="cookies.length" hide-default-footer>
+            <template v-slot:item.expirationDate="{item}">
+              <span v-if="item.expirationDate">{{ new Date(item.expirationDate*1000).toLocaleString() }}</span>
+              <span v-else>Session</span>
+            </template>
+          </v-data-table>
+        </v-list-item>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -43,6 +63,7 @@ export default {
         {text: "网络延迟(ms)", value: "netDelay", sortable: false},
         {text: "在线检测", value: "lastOnlineAt", sortable: false},
         {text: "购物车", value: "cart", sortable: false},
+        {text: "Cookies", value: "Cookies", sortable: false},
       ]
     },
     cartHeaders() {
@@ -52,11 +73,20 @@ export default {
         {text: "加购数量", value: "Quantity", sortable: false},
         {text: "总金额(CNY)", value: "Price", sortable: false},
       ]
+    },
+    cookiesHeaders() {
+      return [
+        {text: "domain", value: "domain", sortable: false},
+        {text: "expirationDate", value: "expirationDate", sortable: false},
+        {text: "name", value: "name", sortable: false},
+        {text: "value", value: "value", sortable: false},
+      ]
     }
   },
   data() {
     return {
       cartDialog: false,
+      cookieDialog: false,
       workers: [],
       cart: {
         CartCount: "0",
@@ -72,6 +102,8 @@ export default {
           }
         ],
       },
+      cookies: [],
+      cookies_str: "",
       clock: null,
     }
   },
@@ -91,6 +123,14 @@ export default {
       this.cart = cart
       this.cartDialog = true
     },
+    showCookies(item) {
+      if (!item.cookies_str) {
+        return false
+      }
+      this.cookies = item.cookies
+      this.cookies_str = item.cookies_str
+      this.cookieDialog = true
+    }
   },
   activated() {
     this.getWorkers()
