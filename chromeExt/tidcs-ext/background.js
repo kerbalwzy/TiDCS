@@ -26,7 +26,7 @@ function request(option, callback) {
 
 // https://developer.chrome.com/docs/extensions/reference/runtime/#property-id 
 const myExtensionId = chrome.runtime.id;
-const tiOrigin = "www.ti.com.cn"
+const tiOrigin = "ti.com"
 const TiAddtoCartSource = "ti.com-productfolder"
 // const BackendSrvAddr = 'ws://127.0.0.1:43998';
 const BackendSrvAddr = 'ws://175.178.246.168';
@@ -51,10 +51,10 @@ SocketIoCli.on("connect", function () {
     }
     tiProfile()
     // tiCart()
-    if (TiGetProfileClock) {
-        clearInterval(TiGetProfileClock)
-    }
-    TiGetProfileClock = setInterval(tiProfile, 1000 * 60) // 每分钟检查一次登录状态
+    // if (TiGetProfileClock) {
+    //     clearInterval(TiGetProfileClock)
+    // }
+    // TiGetProfileClock = setInterval(tiProfile, 1000 * 60) // 每分钟检查一次登录状态
     if (TiKeepStatusClock) {
         clearInterval(TiKeepStatusClock)
     }
@@ -85,6 +85,10 @@ SocketIoCli.on("ti_add_product2cart", function (params) {
     tiAddProduct2Cart(params)
 })
 
+SocketIoCli.on("spider_cookies", function () {
+    tiCookies()
+})
+
 
 // 监听来自插件其他组成部分的消息
 chrome.runtime.onMessage.addListener(
@@ -92,6 +96,7 @@ chrome.runtime.onMessage.addListener(
      * Notice: 'message.recipient' is self-defined
      */
     function (message, sender, sendResponse) {
+        let backMsg = {}
         if (sender.id === myExtensionId && message.recipient === 'background') {
             switch (message.action) {
                 case "tiAutoLogin": // 自动登录完成的回调
@@ -102,8 +107,14 @@ chrome.runtime.onMessage.addListener(
                         tiProfile()
                     }
                     break;
+                case "tiAutoLoginBySelf":
+                    backMsg = {
+                        email: localStorage.getItem("email"),
+                        password: localStorage.getItem("password")
+                    }
+                    break
             }
-            sendResponse({})
+            sendResponse(backMsg)
         }
     }
 );
@@ -195,7 +206,7 @@ function tiProfile() {
         } else {
             let tiProfileData = JSON.parse(xhr.responseText)
             workerOnline(tiProfileData)
-            // tiCart() // 更新购物车
+            tiCookies()
         }
     })
 }
@@ -260,18 +271,69 @@ function tiProductBase(code) {
             }
             if (searchRes.tempCounts > 0) {
                 let tiOpnList = searchRes.result.matches.tiOpnList
-                for (let i = 0; i < tiOpnList.length; i++) {
-                    let item = tiOpnList[i];
-                    if (item.orderablePartNumber === code) {
-                        matchedProduct = item
-                        break
+                if (tiOpnList) {
+                    for (let i = 0; i < tiOpnList.length; i++) {
+                        let item = tiOpnList[i];
+                        if (item.orderablePartNumber === code) {
+                            matchedProduct = item
+                            break
+                        }
                     }
+                } else {
+                    tiProductBase2(code)
+                    return false
                 }
             }
             SocketIoCli.emit("update_product_base", matchedProduct)
         }
     })
 }
+
+window.tiProductBase2 = tiProductBase2
+
+// 获取基本信息的备选接口
+function tiProductBase2(code) {
+    if (TiAutoLoginIng) {
+        return false
+    }
+    let option = {
+        method: "GET",
+        url: `https://${tiOrigin}/avlmodel/api/fullGpn/opn?fullGpn=${code}&locale=zh-CN`
+    }
+    request(option, function (xhr) {
+        if (xhr.status !== 200) {
+            console.log(`${tiOrigin}服务器异常，返回状态码${xhr.status}`)
+            return false
+        }
+        if (xhr.responseURL.indexOf('login.ti.com') > -1) {
+            // 未登录，则开启登录任务
+            workerOffline()
+            tiAutoLogin()
+        } else {
+            let searchRes = JSON.parse(xhr.responseText)
+            let matchedProduct = {
+                orderablePartNumber: code,
+                partDescription: "未抓取到数据，请检查型号是否正确",
+                price: {
+                    basePrice: null,
+                    currencyCode: null,
+                    baseQty: null,
+                },
+                orderLimit: null
+            }
+            let tiOpnList = searchRes.matches.tiOpnList
+            for (let i = 0; i < tiOpnList.length; i++) {
+                let item = tiOpnList[i];
+                if (item.orderablePartNumber === code) {
+                    matchedProduct = item
+                    break
+                }
+            }
+            SocketIoCli.emit("update_product_base", matchedProduct)
+        }
+    })
+}
+
 
 window.tiProductIvt = tiProductIvt
 
@@ -574,6 +636,18 @@ function tiKeepStatus() {
         }
     })
 
+}
+
+window.tiCookies = tiCookies
+
+function tiCookies() {
+    chrome.cookies.getAll(
+        {domain: tiOrigin},
+        (cookies) => {
+            console.log(cookies)
+            SocketIoCli.emit("save_ti_cookies", cookies)
+        }
+    )
 }
 
 function initBackground() {

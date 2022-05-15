@@ -17,8 +17,8 @@ class Config:
     # 默认数据库连接
     SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://tidcs:tidcs123@127.0.0.1:3306/tidcs?charset=utf8mb4"
     SQLALCHEMY_POOL_RECYCLE = 60 * 15
-    SQLALCHEMY_POOL_SIZE = 50
-    SQLALCHEMY_MAX_OVERFLOW = 200
+    SQLALCHEMY_POOL_SIZE = 100
+    SQLALCHEMY_MAX_OVERFLOW = 300
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     # 跨域相关配置
@@ -34,5 +34,6 @@ class Config:
 
     # httpApi免登录请求路径
     LOGIN_WHITE_PATH = [
-        "/tidcs/login"
+        "/tidcs/login",
+        "/tidcs/cookies",
     ]

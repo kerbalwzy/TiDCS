@@ -25,7 +25,7 @@ def login():
                               key=current_app.config.get("SECRET_KEY")).decode('ascii')
     resp = json_resp(errcode=0, msg="success", data={
         "access_token": access_token, "account": params["account"]})
-    resp.set_cookie('access_token', access_token)
+    resp.set_cookie('access_token', access_token, samesite="None", secure=True)
     return resp
 
 

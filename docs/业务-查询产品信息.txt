@@ -154,3 +154,81 @@ xhr.send()
     "selectedPartNumber": "TPS2557DRBR",
     "selectedManufacturer": "Texas Instruments"
 }
+
+// 第二种结果
+{
+    "searchTerm": "CSD25304W1015",
+    "gpnInfo": {
+        "genericPartNumber": "CSD25304W1015",
+        "genericPartID": 1886481,
+        "partDescription": "-20-V, P channel NexFET™ power MOSFET single WLP 1 mm x 1.5 mm, 32.5 mOhm",
+        "statusID": 1,
+        "statusDisplay": "ACTIVE",
+        "statusDescription": "This product has been released to the market and is available for purchase.  For some products, newer alternatives may be available.",
+        "newFlag": "N",
+        "familyName": "P-channel MOSFETs",
+        "partImage": "https://www.ti.com/graphics/folders/partimages/CSD25304W1015.jpg",
+        "hasAlternates": false,
+        "releaseDate": "2014-07-18T05:00:00.000+00:00",
+        "alternatesList": [],
+        "ihsPartInfo": {
+            "isTIPart": true,
+            "hasIhsParameters": false,
+            "ihsParamInfoList": []
+        }
+    },
+    "tempFlag": 1,
+    "result": {
+        "matches": {
+            "tiGpnList": [
+                {
+                    "genericPartNumber": "CSD25304W1015",
+                    "genericPartID": 1886481,
+                    "partDescription": "-20-V, P channel NexFET™ power MOSFET single WLP 1 mm x 1.5 mm, 32.5 mOhm",
+                    "statusID": 1,
+                    "statusDisplay": "ACTIVE",
+                    "statusDescription": "This product has been released to the market and is available for purchase.  For some products, newer alternatives may be available.",
+                    "newFlag": "N",
+                    "familyName": "P-channel MOSFETs",
+                    "partImage": "https://www.ti.com/graphics/folders/partimages/CSD25304W1015.jpg",
+                    "hasAlternates": false,
+                    "releaseDate": "2014-07-18T05:00:00.000+00:00",
+                    "alternatesList": [],
+                    "ihsPartInfo": {
+                        "isTIPart": true,
+                        "hasIhsParameters": false,
+                        "ihsParamInfoList": []
+                    }
+                }
+            ]
+        }
+    },
+    "tempCounts": 1,
+    "selectedPartNumber": "CSD25304W1015",
+    "selectedManufacturer": "Texas Instruments"
+}
+
+// 第二种方式
+fetch("https://www.ti.com/avlmodel/api/fullGpn/opn?fullGpn=CSD25304W1015&locale=en-US", {
+  "headers": {
+    "accept": "*/*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,ko;q=0.7,de;q=0.6",
+    "cache-control": "no-cache",
+    "content-type": "application/json",
+    "pragma": "no-cache",
+    "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"101\", \"Google Chrome\";v=\"101\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"macOS\"",
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "x-sec-clge-req-type": "ajax"
+  },
+  "referrer": "https://www.ti.com/cross-reference-search/singlepart?searchTerm=CSD25304W1015",
+  "referrerPolicy": "no-referrer-when-downgrade",
+  "body": null,
+  "method": "GET",
+  "mode": "cors",
+  "credentials": "include"
+});
+

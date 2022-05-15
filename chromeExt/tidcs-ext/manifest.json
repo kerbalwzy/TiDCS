@@ -23,7 +23,7 @@
     {
       "matches": [
         "https://login.ti.com/as/authorization.oauth2*",
-        "https://login.ti.com/idp/SSO.saml2"
+        "https://login.ti.com/idp*"
       ],
       "js": [
         "libs/jquery-3.6.0.min.js",

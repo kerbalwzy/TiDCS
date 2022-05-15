@@ -2,6 +2,7 @@ console.log("[Debug] Content-Script:tiAutoLogin loaded!");
 const WaitEleTimes = 30
 const WaitEleInterval = 1000
 const myExtensionId = chrome.runtime.id;
+let IsAutoLoginIng = false
 
 // 等待某个元素加载完成, 再执行任务
 function _waitEleDom(selector, times, interval) {
@@ -103,6 +104,7 @@ function sendMsg2Background(msg, callback) {
 // 自动登录任务
 function autoLogin(email, password) {
     // 输入邮箱
+    IsAutoLoginIng = true
     waitEleDom('#username-screen > div.u-margin-top-s > input').then((emailInput) => {
         emailInput.value = email
         eleDomDispatchEvent(emailInput, "input")
@@ -159,6 +161,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
     }
 );
+
+function autoLoginBySelf() {
+    console.log("autoLoginBySelf")
+    let msg = {
+        recipient: "background", // 添加接收者名称
+        action: "tiAutoLoginBySelf"// 添加行为
+    }
+    chrome.runtime.sendMessage(
+        myExtensionId,
+        msg,
+        function (resp) {
+            if (resp.email && resp.password) {
+                autoLogin(resp.email, resp.password)
+            }
+        }
+    )
+}
+
+setTimeout(autoLoginBySelf, 5000)
 
 
 
