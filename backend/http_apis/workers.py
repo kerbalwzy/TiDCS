@@ -28,7 +28,12 @@ def online_cookies():
         for worker in workers:
             if worker.email == params["email"]:
                 data["cookies_str"] = worker.status()["cookies_str"]
-                data["cookies_list"] = worker.cookies
+                data["cookies_list"] = [{
+                    "domain": item["domain"],
+                    "name": item["name"],
+                    "value": item["value"],
+                    "expirationDate": item.get("expirationDate", "Session")
+                } for item in worker.cookies]
                 return jsonify(data)
         return jsonify(data)
     else:
@@ -37,7 +42,12 @@ def online_cookies():
             item = {
                 "email": worker.email,
                 "cookies_str": worker.status()["cookies_str"],
-                "cookies_list": worker.cookies
+                "cookies_list": [{
+                    "domain": item["domain"],
+                    "name": item["name"],
+                    "value": item["value"],
+                    "expirationDate": item.get("expirationDate", "Session")
+                } for item in worker.cookies]
             }
             data.append(item)
         return jsonify(data)
