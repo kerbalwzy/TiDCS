@@ -110,7 +110,7 @@ def clock_spider_ti_cart():
             socket_io.emit("spider_cart")
         except:
             pass
-        socket_io.sleep(10)
+        socket_io.sleep(15)
 
 
 def send_spider_product_ivt_tasks(group_limit, sid, tasks):
@@ -325,9 +325,9 @@ def init_socket_io():
         msg = f"产品抢购成功\n下单账号:\n{worker.email}\n产品型号:\n{data['code']}"
         current_app.logger.info(msg)
         #
-        # t = Thread(target=tg_bot_send_text, args=(f"{msg}\n请尽快进行后续的人工处理",))
-        # t.setDaemon(True)
-        # t.start()
+        t = Thread(target=tg_bot_send_text, args=(f"{msg}\n请尽快进行后续的人工处理",))
+        t.setDaemon(True)
+        t.start()
 
     @socket_io.event
     def save_ti_cookies(data):
@@ -345,9 +345,9 @@ def init_socket_io():
     socket_io.start_background_task(clock_auto_gc)
     socket_io.start_background_task(clock_spider_cookies)
     # 以下功能暂时停用
-    # socket_io.start_background_task(clock_spider_product_base)
-    # socket_io.start_background_task(clock_spider_ti_cart)
-    # socket_io.start_background_task(clock_spider_product_ivt)
+    socket_io.start_background_task(clock_spider_product_base)
+    socket_io.start_background_task(clock_spider_ti_cart)
+    socket_io.start_background_task(clock_spider_product_ivt)
 
 
 class ChromeExtWorker:

@@ -17,6 +17,7 @@ list_product_parser.add_argument("page", type=int, location="args", default=1)
 list_product_parser.add_argument("limit", type=int, location="args", default=0)
 list_product_parser.add_argument("code", type=str, location="args")
 list_product_parser.add_argument("desc", type=str, location="args")
+list_product_parser.add_argument("onlyIvt", type=str, location="args")
 
 
 @httpApi.route("/products", methods=["GET"], endpoint="获取产品列表")
@@ -27,6 +28,8 @@ def list_products():
         filters.append(Product.code.like(f"%{params['code']}%"))
     if params["desc"]:
         filters.append(Product.desc.like(f"%{params['desc']}%"))
+    if params["onlyIvt"] == "true":
+        filters.append(Product.inventory > 0)
     query = db.session.query(Product).filter(*filters).order_by(Product.createTime.desc()).order_by(Product.code.asc())
     result, count = query_paginate(query=query, page=params["page"], limit=params["limit"])
     # 解析数据, 并检查数据

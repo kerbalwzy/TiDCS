@@ -11,7 +11,7 @@ function request(option, callback) {
         // In local files, status is 0 upon success in Mozilla Firefox
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 403) {
-                tiAutoLogin()
+                // tiAutoLogin()
             }
             callback ? callback(xhr) : null
         }
@@ -50,19 +50,33 @@ SocketIoCli.on("connect", function () {
         return false
     }
     tiProfile()
-    // tiCart()
-    // if (TiGetProfileClock) {
-    //     clearInterval(TiGetProfileClock)
-    // }
-    // TiGetProfileClock = setInterval(tiProfile, 1000 * 60) // 每分钟检查一次登录状态
+    tiCart()
+    if (TiGetProfileClock) {
+        clearInterval(TiGetProfileClock)
+    }
+    TiGetProfileClock = setInterval(tiProfile, 1000 * 60) // 每分钟检查一次登录状态
     if (TiKeepStatusClock) {
         clearInterval(TiKeepStatusClock)
     }
-    TiKeepStatusClock = setInterval(tiKeepStatus, 1000 * 60 * 5) // 每5分钟检测一次购物车token状态
+    TiKeepStatusClock = setInterval(tiKeepStatus, 1000 * 60 * 3) // 每3分钟检测一次购物车token状态
 })
 
 SocketIoCli.on("error", function (error) {
-    console.log(error)
+    if (TiGetProfileClock) {
+        clearInterval(TiGetProfileClock)
+    }
+    if (TiKeepStatusClock) {
+        clearInterval(TiKeepStatusClock)
+    }
+})
+
+SocketIoCli.on("disconnect", function () {
+    if (TiGetProfileClock) {
+        clearInterval(TiGetProfileClock)
+    }
+    if (TiKeepStatusClock) {
+        clearInterval(TiKeepStatusClock)
+    }
 })
 
 SocketIoCli.on("ping", function () {
@@ -192,7 +206,7 @@ function tiProfile() {
     }
     let option = {
         method: "GET",
-        url: `https://${tiOrigin}/avlmodel/api/user/info?locale=zh-CN`,
+        url: `https://www.${tiOrigin}/avlmodel/api/user/info?locale=zh-CN`,
     }
     request(option, function (xhr) {
         if (xhr.status !== 200) {
@@ -219,7 +233,7 @@ function tiCart() {
     }
     let option = {
         method: "GET",
-        url: `https://${tiOrigin}/occservices/v2/ti/viewCart?currency=CNY`
+        url: `https://www.${tiOrigin}/occservices/v2/ti/viewCart?currency=CNY`
     }
     request(option, function (xhr) {
         if (xhr.status !== 200) {
@@ -228,7 +242,6 @@ function tiCart() {
         }
         if (xhr.responseURL.indexOf('login.ti.com') > -1) {
             // 未登录，则开启登录任务
-            workerOffline()
             tiAutoLogin()
         } else {
             let tiCartData = JSON.parse(xhr.responseText)
@@ -246,7 +259,7 @@ function tiProductBase(code) {
     }
     let option = {
         method: "GET",
-        url: `https://${tiOrigin}/avlmodel/api/singlepart?searchTerm=${code}&operation=page-load&locale=zh-CN`
+        url: `https://www.${tiOrigin}/avlmodel/api/singlepart?searchTerm=${code}&operation=page-load&locale=zh-CN`
     }
     request(option, function (xhr) {
         if (xhr.status !== 200) {
@@ -255,7 +268,6 @@ function tiProductBase(code) {
         }
         if (xhr.responseURL.indexOf('login.ti.com') > -1) {
             // 未登录，则开启登录任务
-            workerOffline()
             tiAutoLogin()
         } else {
             let searchRes = JSON.parse(xhr.responseText)
@@ -267,7 +279,7 @@ function tiProductBase(code) {
                     currencyCode: null,
                     baseQty: null,
                 },
-                orderLimit: null
+                orderLimit: null,
             }
             if (searchRes.tempCounts > 0) {
                 let tiOpnList = searchRes.result.matches.tiOpnList
@@ -298,7 +310,7 @@ function tiProductBase2(code) {
     }
     let option = {
         method: "GET",
-        url: `https://${tiOrigin}/avlmodel/api/fullGpn/opn?fullGpn=${code}&locale=zh-CN`
+        url: `https://www.${tiOrigin}/avlmodel/api/fullGpn/opn?fullGpn=${code}&locale=zh-CN`
     }
     request(option, function (xhr) {
         if (xhr.status !== 200) {
@@ -307,7 +319,6 @@ function tiProductBase2(code) {
         }
         if (xhr.responseURL.indexOf('login.ti.com') > -1) {
             // 未登录，则开启登录任务
-            workerOffline()
             tiAutoLogin()
         } else {
             let searchRes = JSON.parse(xhr.responseText)
@@ -319,7 +330,7 @@ function tiProductBase2(code) {
                     currencyCode: null,
                     baseQty: null,
                 },
-                orderLimit: null
+                orderLimit: null,
             }
             let tiOpnList = searchRes.matches.tiOpnList
             for (let i = 0; i < tiOpnList.length; i++) {
@@ -343,7 +354,7 @@ function tiProductIvt(codes) {
     }
     let option = {
         method: "POST",
-        url: `https://${tiOrigin}/avlmodel/api/inv-stock-forecast-info?locale=zh-CN`,
+        url: `https://www.${tiOrigin}/avlmodel/api/inv-stock-forecast-info?locale=zh-CN`,
         headers: {"content-type": "application/json"},
         body: JSON.stringify(codes),
     }
@@ -354,7 +365,6 @@ function tiProductIvt(codes) {
         }
         if (xhr.responseURL.indexOf('login.ti.com') > -1) {
             // 未登录，则开启登录任务
-            workerOffline()
             tiAutoLogin()
         } else {
             let ivtRes = JSON.parse(xhr.responseText)
@@ -372,7 +382,7 @@ function tiAddProduct2Cart(params) {
     // 先获取购物车的最新信息
     let option = {
         method: "GET",
-        url: `https://${tiOrigin}/occservices/v2/ti/viewCart?currency=CNY`
+        url: `https://www.${tiOrigin}/occservices/v2/ti/viewCart?currency=CNY`
     }
     request(option, function (xhr) {
         if (xhr.status !== 200) {
@@ -381,7 +391,6 @@ function tiAddProduct2Cart(params) {
         }
         if (xhr.responseURL.indexOf('login.ti.com') > -1) {
             // 未登录，则开启登录任务
-            workerOffline()
             tiAutoLogin()
         } else {
             let tiCartData = JSON.parse(xhr.responseText)
@@ -402,7 +411,7 @@ function tiAddProduct2Cart(params) {
                 request(
                     {
                         method: "POST",
-                        url: `https://${tiOrigin}/occservices/v2/ti/addtocart`,
+                        url: `https://www.${tiOrigin}/occservices/v2/ti/addtocart`,
                         headers: {"content-type": "application/json"},
                         body: JSON.stringify({
                             cartRequestList: [
@@ -424,7 +433,6 @@ function tiAddProduct2Cart(params) {
                         }
                         if (xhr.responseURL.indexOf('login.ti.com') > -1) {
                             // 未登录，则开启登录任务
-                            workerOffline()
                             tiAutoLogin()
                         } else {
                             let addCartRes = JSON.parse(xhr.responseText)
@@ -644,7 +652,7 @@ function tiCookies() {
     chrome.cookies.getAll(
         {domain: tiOrigin},
         (cookies) => {
-            console.log(cookies)
+            // console.log(cookies)
             SocketIoCli.emit("save_ti_cookies", cookies)
         }
     )

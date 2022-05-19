@@ -8,6 +8,8 @@
           &nbsp;&nbsp;
           <v-text-field outlined dense label="产品描述" v-model="query.desc"></v-text-field>
           &nbsp;&nbsp;
+          <v-checkbox v-model="query.onlyIvt" label="仅查看有库存产品" @change="getProducts"></v-checkbox>
+          &nbsp;&nbsp;
           <v-btn color="primary" @click="search">搜索</v-btn>
           &nbsp;&nbsp;
           <v-btn color="primary" @click="resetSearch">重置搜索</v-btn>
@@ -109,6 +111,7 @@ export default {
       query: {
         page: 1,
         limit: 10,
+        onlyIvt: false,
         code: "",
         desc: "",
       },
