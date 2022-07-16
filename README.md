@@ -1,6 +1,14 @@
 ## TiDCS
 
-关于 www.ti.com.cn 的分布式数据抓取与自动控制系统
+关于德州仪器 www.ti.com.cn 的分布式数据抓取与自动控制系统 通过Chrome插件控制浏览器进行自动化的操作，允许在多个浏览器上安装Chrome插件作为客户端统一接入后端程序，实现分布式与集群效果
+
+### 使用效果演示
+
++ [1.首次安装与插件自动登录演示.mov](https://drive.google.com/file/d/1JSd9713PS1HPcPYFr2pvHOIOUmjles_a/view?usp=sharing)
+
++ [2.插件上线与自动获取产品基本信息.mov](https://drive.google.com/file/d/1WErB2pT64R_18x4WkbL-YlEsfJjr6_Kr/view?usp=sharing)
+
++ [3.有库存产品自动抢购.mov](https://drive.google.com/file/d/1Nx2Mu4F9E_Utix35ofH_H3mBe6nKZQgG/view?usp=sharing)
 
 ### 项目组成
 ```text
