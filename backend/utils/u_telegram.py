@@ -5,7 +5,7 @@
 
 import telegram
 
-TOKEN = "5318688479:AAGoz-uUmAPK3oiPQQcndmuHpSIVEAPIUXc"
+TOKEN = "填写你自己的token"
 GROUP_CHAT_ID = "-714275156"
 
 tgBot = telegram.Bot(token=TOKEN)
